@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Web 内容摘录助手",
+  "version": "1.0",
+  "description": "一个可以摘录网页内容，并使用AI大模型生成回复的插件。",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "action": {
+    
+  },
+  "options_page": "options/options.html",
+  "web_accessible_resources": [
+    {
+      "resources": ["content/content_style.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+} 

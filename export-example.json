@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "exportTime": "2024-01-15T10:30:45.123Z",
+    "exportTimestamp": 1705312245123,
+    "version": "1.2.0",
+    "pluginName": "Web 摘录助手",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+  },
+  "pageInfo": {
+    "url": "https://example.com/article",
+    "title": "示例文章标题",
+    "domain": "example.com",
+    "fullHTML": "<!DOCTYPE html><html>...</html>",
+    "htmlLength": 45678,
+    "screenshot": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
+    "screenshotSize": 123456
+  },
+  "selection": {
+    "originalHTML": "<div class=\"content\"><h2>标题</h2><p>内容...</p></div>",
+    "cleanedText": "标题\n内容...",
+    "textLength": 156,
+    "htmlLength": 234,
+    "compressionRatio": 33
+  },
+  "prompt": {
+    "presetName": "内容总结",
+    "presetPrompt": "请总结以下内容：\n\n{selection}\n\n请列出3个要点。",
+    "specialRequirements": "请用中文回答",
+    "fullPrompt": "请总结以下内容：\n\n标题\n内容...\n\n请列出3个要点。\n\n特殊要求：请用中文回答",
+    "promptLength": 89,
+    "hasSpecialRequirements": true
+  },
+  "aiResponse": {
+    "model": "gemini",
+    "result": "根据提供的内容，我总结出以下要点：\n\n1. 主要观点一\n2. 主要观点二\n3. 主要观点三",
+    "resultLength": 67,
+    "requestParameters": {
+      "model": "gemini-pro",
+      "maxTokens": null,
+      "temperature": null,
+      "apiProvider": "Google"
+    },
+    "processingTime": "2024-01-15T10:30:50.456Z"
+  },
+  "statistics": {
+    "totalProcessingTime": "2024-01-15T10:30:50.789Z",
+    "contentReduction": "33%",
+    "promptToResponseRatio": 0.75,
+    "dataSize": {
+      "originalHTML": 234,
+      "cleanedText": 156,
+      "prompt": 89,
+      "response": 67,
+      "screenshot": 123456,
+      "fullHTML": 45678
+    }
+  }
+} 

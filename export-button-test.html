@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导出按钮功能测试 - Web 摘录助手</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-content {
+            background-color: #f0f8ff;
+            padding: 25px;
+            border-radius: 10px;
+            border: 3px solid #007cba;
+            margin: 20px 0;
+        }
+        .info-box {
+            background-color: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4caf50;
+            margin: 20px 0;
+        }
+        .feature-list {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ffeaa7;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔘 导出按钮功能测试</h1>
+    
+    <div class="info-box">
+        <h3 style="color: #2e7d32; margin-top: 0;">📋 测试说明</h3>
+        <p><strong>这个页面用于测试新的手动导出功能。</strong></p>
+        <p>现在插件不会自动导出数据，而是在AI生成完成后提供导出按钮，让您选择是否导出。</p>
+    </div>
+    
+    <div class="test-content">
+        <h2>🧪 测试内容区域</h2>
+        
+        <h3>📝 新的导出流程</h3>
+        <p>Web 摘录助手现在采用<strong>手动导出</strong>的方式，给用户更多控制权：</p>
+        
+        <ol>
+            <li><strong>选择内容</strong>：点击插件图标，选择页面元素</li>
+            <li><strong>配置处理</strong>：选择预设 Prompt，输入特殊要求</li>
+            <li><strong>生成结果</strong>：点击"生成"按钮，等待 AI 处理</li>
+            <li><strong>查看结果</strong>：查看 AI 生成的内容</li>
+            <li><strong>选择操作</strong>：
+                <ul>
+                    <li>📁 <strong>导出 JSON</strong>：导出完整数据到文件</li>
+                    <li>📋 <strong>复制结果</strong>：复制 AI 生成的文本</li>
+                    <li>🔄 <strong>重新生成</strong>：重新调用 AI 处理</li>
+                </ul>
+            </li>
+        </ol>
+        
+        <h3>✨ 新功能特点</h3>
+        <ul>
+            <li><strong>用户控制</strong>：不再自动导出，用户决定是否需要导出</li>
+            <li><strong>多种选择</strong>：提供导出、复制、重新生成三个选项</li>
+            <li><strong>状态反馈</strong>：按钮会显示操作状态（导出中、导出完成、导出失败）</li>
+            <li><strong>错误处理</strong>：导出失败时会显示错误状态并自动恢复</li>
+        </ul>
+        
+        <h3>📊 导出数据内容</h3>
+        <p>点击"📁 导出 JSON"按钮时，会导出包含以下内容的完整数据：</p>
+        <ul>
+            <li>🌐 <strong>页面信息</strong>：URL、标题、完整HTML、页面截图</li>
+            <li>📄 <strong>选中内容</strong>：原始HTML、清洗后文本</li>
+            <li>💬 <strong>Prompt 信息</strong>：预设内容、特殊要求、完整Prompt</li>
+            <li>🤖 <strong>AI 响应</strong>：模型类型、生成结果、请求参数</li>
+            <li>📈 <strong>统计数据</strong>：处理时间、数据大小、压缩比例</li>
+        </ul>
+        
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 4px solid #007cba; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #007cba;">💡 使用建议</h4>
+            <ul style="margin-bottom: 0;">
+                <li>如果只需要AI生成的文本，使用"复制结果"功能</li>
+                <li>如果需要完整的数据记录，使用"导出JSON"功能</li>
+                <li>导出的JSON文件适合用于数据分析和研究</li>
+                <li>文件名包含域名和时间戳，便于管理</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="feature-list">
+        <h3 style="color: #856404; margin-top: 0;">🎯 测试要点</h3>
+        <ol style="color: #856404;">
+            <li><strong>按钮显示</strong>：AI生成完成后，应该显示三个按钮</li>
+            <li><strong>导出功能</strong>：点击"导出JSON"按钮应该下载文件</li>
+            <li><strong>复制功能</strong>：点击"复制结果"应该复制AI文本到剪贴板</li>
+            <li><strong>重新生成</strong>：点击"重新生成"应该重新调用AI</li>
+            <li><strong>状态反馈</strong>：按钮应该显示操作状态变化</li>
+            <li><strong>错误处理</strong>：导出失败时应该显示错误状态</li>
+        </ol>
+    </div>
+    
+    <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; border: 1px solid #2196f3; margin-top: 30px;">
+        <h3 style="color: #1976d2; margin-top: 0;">🚀 开始测试</h3>
+        <ol style="color: #1976d2;">
+            <li>点击浏览器工具栏中的插件图标</li>
+            <li>选择上面的蓝色测试内容区域</li>
+            <li>在弹出窗口中选择一个预设 Prompt</li>
+            <li>点击"生成"按钮，等待AI处理</li>
+            <li>观察结果页面的三个按钮</li>
+            <li>测试每个按钮的功能</li>
+        </ol>
+        
+        <div style="margin-top: 15px; padding: 10px; background-color: #fff3e0; border-radius: 4px; border: 1px solid #ffcc02;">
+            <h4 style="margin: 0 0 10px 0; color: #f57c00;">⚠️ 预期结果：</h4>
+            <ul style="margin: 0; color: #f57c00; font-size: 14px;">
+                <li>生成完成后显示：📁 导出 JSON、📋 复制结果、🔄 重新生成</li>
+                <li>导出按钮点击后变为"导出中..."然后"导出完成"</li>
+                <li>复制按钮点击后变为"已复制"</li>
+                <li>所有按钮都有适当的颜色变化和状态反馈</li>
+            </ul>
+        </div>
+    </div>
+    
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 12px;">
+        <p>Web 摘录助手 v1.2.0 - 导出按钮功能测试页面</p>
+        <p>更新：手动导出控制 | 多种操作选择 | 完善状态反馈</p>
+    </footer>
+</body>
+</html> 

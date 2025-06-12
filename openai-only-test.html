@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAI 功能测试页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        
+        .section h2 {
+            color: #007cba;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007cba;
+            padding-bottom: 5px;
+        }
+        
+        .test-content {
+            background: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+            margin: 10px 0;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin: 10px 0;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            border: 1px solid #e9ecef;
+            margin: 10px 0;
+        }
+        
+        .instructions {
+            background: #d1ecf1;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #17a2b8;
+            margin: 15px 0;
+        }
+        
+        .warning {
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #dc3545;
+            margin: 15px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .feature-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .feature-list li:before {
+            content: "✅ ";
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 OpenAI 功能测试页面</h1>
+        
+        <div class="instructions">
+            <strong>📋 测试说明：</strong>
+            <p>此页面用于测试移除 Gemini API 后，插件是否能正常使用 OpenAI API 进行内容处理。</p>
+        </div>
+        
+        <div class="section">
+            <h2>🎯 测试内容 1: 文章总结</h2>
+            <div class="test-content">
+                <p><strong>人工智能的发展历程</strong></p>
+                <p>人工智能（Artificial Intelligence，AI）是计算机科学的一个分支，它企图了解智能的实质，并生产出一种新的能以人类智能相似的方式做出反应的智能机器。</p>
+                <p>从1956年达特茅斯会议开始，人工智能经历了多个发展阶段：</p>
+                <ul>
+                    <li>1950-1970年代：符号主义AI的兴起</li>
+                    <li>1980年代：专家系统的繁荣</li>
+                    <li>1990年代：机器学习的发展</li>
+                    <li>2010年代：深度学习的突破</li>
+                    <li>2020年代：大语言模型的崛起</li>
+                </ul>
+                <p>如今，AI技术已经广泛应用于各个领域，包括自然语言处理、计算机视觉、语音识别、推荐系统等。</p>
+            </div>
+            <div class="highlight">
+                <strong>建议测试 Prompt：</strong> "请总结以上内容的主要发展阶段，用3-5个要点概括。"
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📊 测试内容 2: 数据分析</h2>
+            <div class="test-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>年份</th>
+                            <th>用户数量（万）</th>
+                            <th>增长率</th>
+                            <th>主要特征</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2020</td>
+                            <td>1000</td>
+                            <td>-</td>
+                            <td>基础功能</td>
+                        </tr>
+                        <tr>
+                            <td>2021</td>
+                            <td>2500</td>
+                            <td>150%</td>
+                            <td>移动端优化</td>
+                        </tr>
+                        <tr>
+                            <td>2022</td>
+                            <td>4200</td>
+                            <td>68%</td>
+                            <td>AI功能集成</td>
+                        </tr>
+                        <tr>
+                            <td>2023</td>
+                            <td>6800</td>
+                            <td>62%</td>
+                            <td>多平台支持</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="highlight">
+                <strong>建议测试 Prompt：</strong> "分析这个表格数据，说明用户增长趋势和关键因素。"
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>💻 测试内容 3: 代码解释</h2>
+            <div class="test-content">
+                <div class="code-block">
+function processData(data) {
+    const filtered = data.filter(item => item.status === 'active');
+    const mapped = filtered.map(item => ({
+        id: item.id,
+        name: item.name,
+        score: item.score * 1.2
+    }));
+    return mapped.sort((a, b) => b.score - a.score);
+}
+
+// 使用示例
+const rawData = [
+    { id: 1, name: 'Alice', score: 85, status: 'active' },
+    { id: 2, name: 'Bob', score: 92, status: 'inactive' },
+    { id: 3, name: 'Charlie', score: 78, status: 'active' }
+];
+
+const result = processData(rawData);
+console.log(result);
+                </div>
+            </div>
+            <div class="highlight">
+                <strong>建议测试 Prompt：</strong> "请解释这段JavaScript代码的功能和执行流程。"
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🔧 功能验证清单</h2>
+            <ul class="feature-list">
+                <li>插件图标点击后能正常进入选择模式</li>
+                <li>元素选择时显示红色虚线边框</li>
+                <li>选择元素后弹出处理窗口</li>
+                <li>设置页面只显示 OpenAI API Key 配置</li>
+                <li>预设 Prompt 功能正常工作</li>
+                <li>AI 生成功能使用 OpenAI 模型</li>
+                <li>导出 JSON 功能正常</li>
+                <li>复制结果功能正常</li>
+                <li>重新生成功能正常</li>
+            </ul>
+        </div>
+        
+        <div class="warning">
+            <strong>⚠️ 注意事项：</strong>
+            <ul>
+                <li>确保已在设置页面配置有效的 OpenAI API Key</li>
+                <li>测试前请检查网络连接</li>
+                <li>如果遇到错误，请查看浏览器控制台日志</li>
+                <li>导出的 JSON 文件中 apiProvider 应显示为 "OpenAI"</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>📝 测试步骤</h2>
+            <ol>
+                <li><strong>配置设置：</strong> 右键插件图标 → 选项 → 输入 OpenAI API Key → 保存</li>
+                <li><strong>选择内容：</strong> 点击插件图标 → 点击上方任一测试内容区域</li>
+                <li><strong>处理内容：</strong> 在弹窗中输入建议的测试 Prompt → 点击生成</li>
+                <li><strong>验证结果：</strong> 查看 AI 生成结果是否合理</li>
+                <li><strong>测试导出：</strong> 点击"📁 导出 JSON"按钮 → 检查导出文件</li>
+                <li><strong>检查日志：</strong> 按 F12 → Console → 查看是否有错误信息</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html> 
