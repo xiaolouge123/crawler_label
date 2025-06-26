@@ -185,6 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentCleanedText = '';
   let selectedPreset = null;
   let lastFullPrompt = ''; // 保存最后发送的完整prompt
+  let multiSelectionData = null; // 多选数据
+  let isMultiSelectMode = false; // 是否为多选模式
   
   // 模型描述映射
   const modelDescriptions = {
@@ -196,6 +198,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 初始化模型选择器
   initializeModelSelector();
+
+  // 监听storage变化，实时更新多选内容
+  if (chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (namespace === 'local' && changes.multiSelectionData) {
+        console.log("检测到多选数据变化:", changes.multiSelectionData);
+        
+        if (changes.multiSelectionData.newValue) {
+          multiSelectionData = changes.multiSelectionData.newValue;
+          isMultiSelectMode = true;
+          renderSelectionContainer();
+          
+          // 重新渲染界面以显示正确的按钮
+          renderSelectionContainer();
+        }
+      }
+    });
+  }
   
   // 模型选择器变化事件
   modelSelector.addEventListener('change', (e) => {
@@ -218,6 +238,90 @@ document.addEventListener('DOMContentLoaded', () => {
     // 关闭popup窗口
     window.close();
   });
+
+  // 继续选择按钮事件监听
+  const continueSelectionBtn = document.getElementById('continue-selection-btn');
+  if (continueSelectionBtn) {
+    continueSelectionBtn.addEventListener('click', () => {
+      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        const currentTab = tabs[0];
+        
+        // 发送消息到background脚本，在当前页面开始选择
+        chrome.runtime.sendMessage({
+          type: "start-selection-on-tab",
+          tabId: currentTab.id
+        }, (response) => {
+          if (response && response.success) {
+            console.log("已在当前页面启动选择模式");
+            
+            // 更新UI状态
+            continueSelectionBtn.style.display = 'none';
+            document.getElementById('finish-selection-btn').style.display = 'inline-block';
+            document.getElementById('multi-selection-hint').style.display = 'block';
+            
+            // 关闭popup，让用户在页面上选择
+            setTimeout(() => {
+              window.close();
+            }, 500);
+          }
+        });
+      });
+    });
+  }
+
+  // 完成选择按钮事件监听
+  const finishSelectionBtn = document.getElementById('finish-selection-btn');
+  if (finishSelectionBtn) {
+    finishSelectionBtn.addEventListener('click', () => {
+      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { type: "finish-selection" });
+        
+        // 等待一下让页面状态更新，然后重新渲染界面
+        setTimeout(() => {
+          renderSelectionContainer();
+        }, 100);
+      });
+    });
+  }
+
+  // 新会话按钮事件监听
+  const newSessionBtn = document.getElementById('new-session-btn');
+  if (newSessionBtn) {
+    newSessionBtn.addEventListener('click', () => {
+      if (confirm('确定要开始新的选择会话吗？当前的选择内容将被清空，页面上的选中状态也会被清除。')) {
+        console.log('开始新会话，清空所有数据和页面状态');
+        
+        // 发送消息清空所有状态，包括页面上的选中状态
+        chrome.runtime.sendMessage({ 
+          type: "new-session",
+          clearPageState: true 
+        }, (response) => {
+          if (response && response.success) {
+            console.log('新会话已启动，所有状态已清空');
+            
+            // 清空本地数据
+            multiSelectionData = null;
+            isMultiSelectMode = false;
+            renderSelectionContainer();
+            newSessionBtn.style.display = 'none';
+            finishSelectionBtn.style.display = 'none';
+            continueSelectionBtn.style.display = 'none';
+            document.getElementById('multi-selection-hint').style.display = 'none';
+            document.getElementById('continue-selection-hint').style.display = 'none';
+            
+            // 关闭popup，用户需要重新点击插件图标开始新的选择
+            setTimeout(() => {
+              window.close();
+            }, 500);
+          } else {
+            console.error('新会话启动失败');
+          }
+        });
+      }
+    });
+  }
+
+
 
   // 生成按钮点击事件
   generateButton.addEventListener('click', async () => {
@@ -444,27 +548,302 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // 渲染选择内容容器
+  function renderSelectionContainer() {
+    if (isMultiSelectMode && multiSelectionData && multiSelectionData.selections.length > 0) {
+      // 多选模式显示
+      document.getElementById('selection-title').textContent = `捕获到的内容 (${multiSelectionData.selections.length}个)`;
+      
+      // 检查当前页面是否在选择模式
+      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        chrome.action.getBadgeText({tabId: tabs[0].id}, (badgeText) => {
+          const isCurrentPageSelecting = badgeText && !isNaN(parseInt(badgeText));
+          
+          if (isCurrentPageSelecting) {
+            // 当前页面正在选择模式，显示"完成选择"按钮
+            document.getElementById('continue-selection-btn').style.display = 'none';
+            document.getElementById('finish-selection-btn').style.display = 'inline-block';
+            document.getElementById('multi-selection-hint').style.display = 'block';
+            document.getElementById('continue-selection-hint').style.display = 'none';
+          } else {
+            // 当前页面未在选择模式，但有多选数据，显示"继续选择"按钮
+            document.getElementById('continue-selection-btn').style.display = 'inline-block';
+            document.getElementById('finish-selection-btn').style.display = 'none';
+            document.getElementById('multi-selection-hint').style.display = 'none';
+            document.getElementById('continue-selection-hint').style.display = 'block';
+          }
+          
+          // 始终显示"新会话"按钮当有多选数据时
+          document.getElementById('new-session-btn').style.display = 'inline-block';
+        });
+      });
+      
+      let containerHTML = '';
+      multiSelectionData.selections.forEach((selection, index) => {
+        const cleanedText = cleanHTML(selection.html);
+        const truncatedText = cleanedText.length > 150 ? cleanedText.substring(0, 150) + '...' : cleanedText;
+        
+        // 获取页面信息
+        const pageTitle = selection.pageInfo ? selection.pageInfo.title : '未知页面';
+        const pageUrl = selection.pageInfo ? selection.pageInfo.url : '';
+        const globalOrder = selection.globalOrder || selection.order;
+        
+        // 缩短URL显示
+        const shortUrl = pageUrl ? new URL(pageUrl).hostname : '';
+        
+        containerHTML += `
+          <div class="selection-item-compact" data-index="${index}">
+            <div class="selection-controls">
+              <button class="remove-item-btn" data-index="${index}" title="删除">🗑️</button>
+              <div class="move-controls">
+                <button class="move-up-btn" data-index="${index}" title="上移" ${index === 0 ? 'disabled' : ''}>↑</button>
+                <button class="move-down-btn" data-index="${index}" title="下移" ${index === multiSelectionData.selections.length - 1 ? 'disabled' : ''}>↓</button>
+              </div>
+            </div>
+            <div class="selection-content">
+              <div class="selection-url">
+                <span class="order-number">${globalOrder}</span>
+                <span class="page-info">${pageTitle} (${shortUrl})</span>
+                <span class="char-count">${cleanedText.length}字</span>
+              </div>
+              <div class="selection-text" title="${cleanedText}">${truncatedText}</div>
+            </div>
+          </div>
+        `;
+      });
+      
+      selectionContainer.innerHTML = containerHTML;
+      
+      // 添加按钮事件监听
+      addButtonListeners();
+      
+      // 计算总的清洗后文本，包含页面信息
+      currentCleanedText = multiSelectionData.selections
+        .map((selection, index) => {
+          const globalOrder = selection.globalOrder || selection.order;
+          const pageTitle = selection.pageInfo ? selection.pageInfo.title : '未知页面';
+          const pageUrl = selection.pageInfo ? selection.pageInfo.url : '';
+          const shortUrl = pageUrl ? new URL(pageUrl).hostname : '';
+          
+          return `=== 选择 ${globalOrder} ===\n页面：${pageTitle}${shortUrl ? ` (${shortUrl})` : ''}\n内容：\n${cleanHTML(selection.html)}`;
+        })
+        .join('\n\n');
+        
+    } else if (currentSelectionHTML) {
+      // 单选模式显示
+      document.getElementById('selection-title').textContent = '捕获到的内容';
+      document.getElementById('continue-selection-btn').style.display = 'none';
+      document.getElementById('finish-selection-btn').style.display = 'none';
+      document.getElementById('new-session-btn').style.display = 'none';
+      document.getElementById('multi-selection-hint').style.display = 'none';
+      document.getElementById('continue-selection-hint').style.display = 'none';
+      
+      currentCleanedText = cleanHTML(currentSelectionHTML);
+      selectionContainer.textContent = currentCleanedText;
+    } else {
+      // 没有内容
+      document.getElementById('selection-title').textContent = '捕获到的内容';
+      document.getElementById('continue-selection-btn').style.display = 'none';
+      document.getElementById('finish-selection-btn').style.display = 'none';
+      document.getElementById('new-session-btn').style.display = 'none';
+      document.getElementById('multi-selection-hint').style.display = 'none';
+      document.getElementById('continue-selection-hint').style.display = 'none';
+      
+      selectionContainer.textContent = '没有捕获到任何内容。请先在页面上点击插件图标，然后选择一个元素。';
+    }
+  }
+
+  // 添加所有按钮的事件监听
+  function addButtonListeners() {
+    // 删除按钮
+    const removeButtons = document.querySelectorAll('.remove-item-btn');
+    console.log(`找到 ${removeButtons.length} 个删除按钮`);
+    
+    removeButtons.forEach((button, i) => {
+      button.addEventListener('click', function() {
+        const index = parseInt(this.getAttribute('data-index'));
+        console.log(`点击删除按钮 ${i}，数据索引为 ${index}`);
+        removeSelectionItem(index);
+      });
+    });
+
+    // 上移按钮
+    const moveUpButtons = document.querySelectorAll('.move-up-btn');
+    moveUpButtons.forEach((button) => {
+      button.addEventListener('click', function() {
+        const index = parseInt(this.getAttribute('data-index'));
+        console.log(`点击上移按钮，数据索引为 ${index}`);
+        moveSelectionItem(index, 'up');
+      });
+    });
+
+    // 下移按钮
+    const moveDownButtons = document.querySelectorAll('.move-down-btn');
+    moveDownButtons.forEach((button) => {
+      button.addEventListener('click', function() {
+        const index = parseInt(this.getAttribute('data-index'));
+        console.log(`点击下移按钮，数据索引为 ${index}`);
+        moveSelectionItem(index, 'down');
+      });
+    });
+  }
+
+  // 删除选择项
+  function removeSelectionItem(index) {
+    console.log(`尝试删除选择项 ${index}`);
+    console.log('当前multiSelectionData:', multiSelectionData);
+    
+    if (multiSelectionData && multiSelectionData.selections.length > index) {
+      // 保存被删除项的信息，用于清除页面高亮
+      const deletedItem = multiSelectionData.selections[index];
+      const deletedItemPageInfo = deletedItem.pageInfo;
+      const deletedItemGlobalOrder = deletedItem.globalOrder || deletedItem.order;
+      
+      console.log(`删除前有 ${multiSelectionData.selections.length} 个选择项`);
+      console.log(`准备删除第 ${deletedItemGlobalOrder} 个选择项，来自页面: ${deletedItemPageInfo ? deletedItemPageInfo.title : '未知页面'}`);
+      
+      // 从数组中移除选择项
+      multiSelectionData.selections.splice(index, 1);
+      console.log(`删除后有 ${multiSelectionData.selections.length} 个选择项`);
+      
+      // 通知background script清除页面上的高亮状态
+      if (deletedItemPageInfo && deletedItemPageInfo.tabId) {
+        chrome.runtime.sendMessage({
+          type: "remove-selection-highlight",
+          tabId: deletedItemPageInfo.tabId,
+          globalOrder: deletedItemGlobalOrder,
+          selectionHtml: deletedItem.html
+        }, (response) => {
+          if (response && response.success) {
+            console.log(`已通知页面清除第 ${deletedItemGlobalOrder} 个选择项的高亮状态`);
+          } else {
+            console.log(`清除页面高亮状态失败或页面不可访问`);
+          }
+        });
+      }
+      
+      // 检查是否需要清理页面信息
+      chrome.storage.local.get('pageInfos', (data) => {
+        let pageInfos = data.pageInfos || [];
+        const deletedPageUrl = deletedItemPageInfo ? deletedItemPageInfo.url : null;
+        
+        if (deletedPageUrl) {
+          // 检查该页面是否还有其他选择项
+          const remainingSelectionsFromSamePage = multiSelectionData.selections.filter(
+            selection => selection.pageInfo && selection.pageInfo.url === deletedPageUrl
+          );
+          
+          // 如果该页面没有其他选择项了，从pageInfos中删除该页面信息
+          if (remainingSelectionsFromSamePage.length === 0) {
+            const pageInfoIndex = pageInfos.findIndex(page => page.url === deletedPageUrl);
+            if (pageInfoIndex !== -1) {
+              pageInfos.splice(pageInfoIndex, 1);
+              console.log(`页面 ${deletedPageUrl} 的所有选择项已删除，清理页面信息`);
+            }
+          }
+        }
+        
+        // 更新存储
+        chrome.storage.local.set({ 
+          multiSelectionData: multiSelectionData,
+          pageInfos: pageInfos
+        }, () => {
+          console.log('存储已更新，重新渲染界面');
+          console.log(`当前页面信息数量: ${pageInfos.length}`);
+          renderSelectionContainer();
+          
+          // 如果没有选择项了，清除多选模式
+          if (multiSelectionData.selections.length === 0) {
+            console.log('所有选择项已删除，清除多选模式');
+            isMultiSelectMode = false;
+            multiSelectionData = null;
+            chrome.storage.local.remove(['multiSelectionData', 'pageInfos']);
+          }
+        });
+      });
+    } else {
+      console.log('删除失败：无效的索引或无数据');
+    }
+  }
+
+  // 移动选择项
+  function moveSelectionItem(index, direction) {
+    console.log(`尝试移动选择项 ${index} 向 ${direction}`);
+    
+    if (!multiSelectionData || !multiSelectionData.selections) {
+      console.log('移动失败：无数据');
+      return;
+    }
+    
+    const selections = multiSelectionData.selections;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    // 检查边界
+    if (targetIndex < 0 || targetIndex >= selections.length) {
+      console.log('移动失败：超出边界');
+      return;
+    }
+    
+    // 交换位置
+    const temp = selections[index];
+    selections[index] = selections[targetIndex];
+    selections[targetIndex] = temp;
+    
+    console.log(`选择项 ${index} 已与 ${targetIndex} 交换位置`);
+    
+    // 更新存储
+    chrome.storage.local.set({ multiSelectionData: multiSelectionData }, () => {
+      console.log('存储已更新，重新渲染界面');
+      renderSelectionContainer();
+    });
+  }
+
   // 1. 从 storage 加载捕获的内容和预设
-  chrome.storage.local.get('lastSelectionHTML', (localData) => {
+  chrome.storage.local.get(['lastSelectionHTML', 'multiSelectionData'], (localData) => {
     console.log("=== 加载本地数据 ===");
     console.log("本地存储数据:", localData);
     
-    if (localData.lastSelectionHTML) {
+    // 检查是否有多选数据
+    if (localData.multiSelectionData && localData.multiSelectionData.selections && localData.multiSelectionData.selections.length > 0) {
+      console.log("发现多选数据，共", localData.multiSelectionData.selections.length, "个选择");
+      multiSelectionData = localData.multiSelectionData;
+      isMultiSelectMode = true;
+      
+      // 检查是否还在选择模式（通过检查当前标签页的状态）
+      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        chrome.action.getBadgeText({tabId: tabs[0].id}, (badgeText) => {
+          // 如果角标是数字，说明还在多选模式
+          if (badgeText && !isNaN(parseInt(badgeText))) {
+            document.getElementById('finish-selection-btn').style.display = 'inline-block';
+            document.getElementById('multi-selection-hint').style.display = 'block';
+            document.getElementById('continue-selection-btn').style.display = 'none';
+            document.getElementById('continue-selection-hint').style.display = 'none';
+          } else {
+            // 没有在选择模式，但有多选数据，显示"继续选择"按钮
+            document.getElementById('continue-selection-btn').style.display = 'inline-block';
+            document.getElementById('continue-selection-hint').style.display = 'block';
+            document.getElementById('finish-selection-btn').style.display = 'none';
+            document.getElementById('multi-selection-hint').style.display = 'none';
+          }
+          // 始终显示"新会话"按钮
+          document.getElementById('new-session-btn').style.display = 'inline-block';
+        });
+      });
+      
+    } else if (localData.lastSelectionHTML) {
+      console.log("发现单选数据");
       currentSelectionHTML = localData.lastSelectionHTML;
+      isMultiSelectMode = false;
+      
       console.log("原始HTML长度:", currentSelectionHTML.length);
       console.log("原始HTML内容（前200字符）:", currentSelectionHTML.substring(0, 200));
-      
-      // 清洗HTML内容
-      currentCleanedText = cleanHTML(currentSelectionHTML);
-      console.log("清洗后内容长度:", currentCleanedText.length);
-      console.log("清洗后内容（前200字符）:", currentCleanedText.substring(0, 200));
-      
-      // 显示清洗后的文本内容
-      selectionContainer.textContent = currentCleanedText;
     } else {
-      console.log("没有找到本地存储的HTML内容");
-      selectionContainer.textContent = '没有捕获到任何内容。请先在页面上点击插件图标，然后选择一个元素。';
+      console.log("没有找到任何选择数据");
+      isMultiSelectMode = false;
     }
+    
+    // 渲染界面
+    renderSelectionContainer();
   });
 
   chrome.storage.sync.get('presets', (syncData) => {
@@ -570,31 +949,104 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         });
       
+      // 构建选择项数据
+      const selections = isMultiSelectMode && multiSelectionData ? 
+        // 多选模式：为每个选择项构建详细信息
+        multiSelectionData.selections.map((selection, index) => {
+          const cleanedText = cleanHTML(selection.html);
+          const htmlLength = selection.html.length;
+          const textLength = cleanedText.length;
+          const compressionRatio = htmlLength > 0 ? Math.round((textLength / htmlLength) * 10000) / 100 : 0;
+          
+          return {
+            index: index + 1,
+            globalOrder: selection.globalOrder || selection.order,
+            originalHTML: selection.html,
+            cleanedText: cleanedText,
+            textLength: textLength,
+            htmlLength: htmlLength,
+            compressionRatio: compressionRatio,
+            pageInfo: {
+              url: selection.pageInfo ? selection.pageInfo.url : currentTab.url,
+              title: selection.pageInfo ? selection.pageInfo.title : currentTab.title,
+              tabId: selection.pageInfo ? selection.pageInfo.tabId : currentTab.id,
+              domain: selection.pageInfo ? new URL(selection.pageInfo.url).hostname : new URL(currentTab.url).hostname
+            },
+            timestamp: selection.timestamp || Date.now()
+          };
+        }) :
+        // 单选模式：构建单个选择项信息
+        [{
+          index: 1,
+          globalOrder: 1,
+          originalHTML: currentSelectionHTML,
+          cleanedText: currentCleanedText,
+          textLength: currentCleanedText.length,
+          htmlLength: currentSelectionHTML.length,
+          compressionRatio: currentSelectionHTML.length > 0 ? Math.round((currentCleanedText.length / currentSelectionHTML.length) * 10000) / 100 : 0,
+          pageInfo: {
+            url: currentTab.url,
+            title: currentTab.title,
+            tabId: currentTab.id,
+            domain: new URL(currentTab.url).hostname
+          },
+          timestamp: Date.now()
+        }];
+
+      // 计算统计信息
+      const totalOriginalHTML = selections.reduce((sum, sel) => sum + sel.htmlLength, 0);
+      const totalCleanedText = selections.reduce((sum, sel) => sum + sel.textLength, 0);
+      const avgCompressionRatio = selections.length > 0 ? 
+        selections.reduce((sum, sel) => sum + sel.compressionRatio, 0) / selections.length : 0;
+      
+      // 统计跨页面信息
+      const uniqueDomains = [...new Set(selections.map(sel => sel.pageInfo.domain))];
+      const uniquePages = [...new Set(selections.map(sel => sel.pageInfo.url))];
+      
+      // 构建pageInfos数组 - 使用存储的页面信息
+      const pageInfos = await new Promise((resolve) => {
+        chrome.storage.local.get('pageInfos', (data) => {
+          let storedPageInfos = data.pageInfos || [];
+          const pageInfosMap = {};
+          
+          // 首先使用存储的页面信息
+          storedPageInfos.forEach(pageInfo => {
+            pageInfosMap[pageInfo.url] = pageInfo;
+          });
+          
+          // 补充当前页面信息（如果还没有的话）
+          if (!pageInfosMap[currentTab.url]) {
+            pageInfosMap[currentTab.url] = {
+              url: currentTab.url,
+              title: currentTab.title,
+              domain: new URL(currentTab.url).hostname,
+              fullHTML: pageHTML,
+              htmlLength: pageHTML.length,
+              screenshot: screenshot,
+              screenshotSize: screenshot.length
+            };
+          } else {
+            // 更新当前页面的截图信息（其他信息保持存储的版本）
+            pageInfosMap[currentTab.url].screenshot = screenshot;
+            pageInfosMap[currentTab.url].screenshotSize = screenshot.length;
+          }
+          
+          // 转换为数组
+          resolve(Object.values(pageInfosMap));
+        });
+      });
+
       // 构建导出数据
       const exportData = {
         metadata: {
           exportTime: new Date().toISOString(),
           exportTimestamp: Date.now(),
-          version: "1.2.0",
+          version: "1.3.0",
           pluginName: "Web 摘录助手",
           userAgent: navigator.userAgent
         },
-        pageInfo: {
-          url: currentTab.url,
-          title: currentTab.title,
-          domain: new URL(currentTab.url).hostname,
-          fullHTML: pageHTML,
-          htmlLength: pageHTML.length,
-          screenshot: screenshot,
-          screenshotSize: screenshot.length
-        },
-        selection: {
-          originalHTML: currentSelectionHTML,
-          cleanedText: currentCleanedText,
-          textLength: currentCleanedText.length,
-          htmlLength: currentSelectionHTML.length,
-          compressionRatio: Math.round((1 - currentCleanedText.length / currentSelectionHTML.length) * 100)
-        },
+        pageInfos: pageInfos,
+        selections: selections,
         prompt: {
           presetName: selectedPreset.name,
           presetPrompt: selectedPreset.prompt,
@@ -616,23 +1068,45 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         statistics: {
           totalProcessingTime: new Date().toISOString(),
-          contentReduction: Math.round((1 - currentCleanedText.length / currentSelectionHTML.length) * 100) + "%",
+          selectionMode: isMultiSelectMode ? 'multi' : 'single',
+          totalSelections: selections.length,
+          totalPages: uniquePages.length,
+          uniqueDomains: uniqueDomains.length,
+          domainsInvolved: uniqueDomains,
+          contentReduction: totalOriginalHTML > 0 ? Math.round((totalOriginalHTML - totalCleanedText) / totalOriginalHTML * 100) + "%" : "0%",
+          averageCompressionRatio: Math.round(avgCompressionRatio * 100) / 100 + "%",
           promptToResponseRatio: Math.round(aiResult.length / lastFullPrompt.length * 100) / 100,
           dataSize: {
-            originalHTML: currentSelectionHTML.length,
-            cleanedText: currentCleanedText.length,
+            totalOriginalHTML: totalOriginalHTML,
+            totalCleanedText: totalCleanedText,
             prompt: lastFullPrompt.length,
             response: aiResult.length,
-            screenshot: screenshot.length,
-            fullHTML: pageHTML.length
+            totalScreenshots: pageInfos.filter(p => p.screenshot !== "无法获取其他页面的截图").length,
+            totalFullHTML: pageInfos.reduce((sum, p) => sum + p.htmlLength, 0)
           }
         }
       };
       
       // 生成文件名
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      const domain = new URL(currentTab.url).hostname.replace(/[^a-zA-Z0-9]/g, '-');
-      const filename = `web-extract-${domain}-${timestamp}.json`;
+      
+      let filenamePart;
+      if (uniquePages.length > 1) {
+        // 跨页面选择：使用域名汇总
+        if (uniqueDomains.length === 1) {
+          // 同一域名的多个页面
+          filenamePart = uniqueDomains[0].replace(/[^a-zA-Z0-9]/g, '-') + `-${uniquePages.length}pages`;
+        } else {
+          // 多个域名
+          filenamePart = `${uniqueDomains.length}domains-${uniquePages.length}pages`;
+        }
+      } else {
+        // 单页面选择
+        filenamePart = new URL(currentTab.url).hostname.replace(/[^a-zA-Z0-9]/g, '-');
+      }
+      
+      const selectionSuffix = selections.length > 1 ? `-${selections.length}selections` : '';
+      const filename = `web-extract-${filenamePart}${selectionSuffix}-${timestamp}.jsonl`;
       
       // 下载JSON文件
       downloadJSON(exportData, filename);
@@ -646,10 +1120,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  // 下载JSON文件
+  // 下载JSON/JSONL文件
   function downloadJSON(data, filename) {
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
+    let fileContent;
+    let mimeType;
+    
+    if (filename.endsWith('.jsonl')) {
+      // JSONL格式：每行一个JSON对象
+      fileContent = JSON.stringify(data);
+      mimeType = 'application/x-jsonlines';
+    } else {
+      // 标准JSON格式
+      fileContent = JSON.stringify(data, null, 2);
+      mimeType = 'application/json';
+    }
+    
+    const blob = new Blob([fileContent], { type: mimeType });
     const url = URL.createObjectURL(blob);
     
     const a = document.createElement('a');
@@ -661,7 +1147,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    console.log("JSON文件已下载:", filename);
+    console.log("文件已下载:", filename);
+    console.log("文件格式:", filename.endsWith('.jsonl') ? 'JSONL' : 'JSON');
   }
   
   // 初始化模型选择器

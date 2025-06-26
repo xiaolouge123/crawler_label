@@ -75,7 +75,7 @@
       background-color: #f7f7f7;
       border: 1px solid #ddd;
       padding: 10px;
-      max-height: 150px;
+      max-height: 200px;
       overflow-y: scroll;
       margin-bottom: 15px;
       font-size: 12px;
@@ -84,6 +84,198 @@
       line-height: 1.4;
       tab-size: 4;
       font-family: 'Courier New', monospace;
+    }
+    
+    .selection-item {
+      border: 1px solid #ccc;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      background-color: #fff;
+      overflow: hidden;
+    }
+    
+    .selection-item-header {
+      background-color: #e9ecef;
+      padding: 6px 10px;
+      border-bottom: 1px solid #ccc;
+      font-size: 11px;
+      font-weight: bold;
+      color: #495057;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .selection-item-content {
+      padding: 8px 10px;
+      max-height: 80px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      line-height: 1.3;
+    }
+    
+    .selection-item-actions {
+      padding: 4px 6px;
+      border-top: 1px solid #eee;
+      text-align: right;
+    }
+    
+    .remove-item-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 10px;
+      border-radius: 2px;
+    }
+    
+    .remove-item-btn:hover {
+      background-color: #c82333;
+    }
+    
+    /* 紧凑布局样式 */
+    .selection-item-compact {
+      border: 1px solid #ddd;
+      margin-bottom: 6px;
+      border-radius: 4px;
+      background-color: #fff;
+      display: flex;
+      overflow: hidden;
+      font-size: 11px;
+    }
+    
+    .selection-controls {
+      display: flex;
+      flex-direction: column;
+      background-color: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+      padding: 4px;
+      min-width: 35px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .selection-controls .remove-item-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 3px 5px;
+      cursor: pointer;
+      font-size: 12px;
+      border-radius: 3px;
+      margin-bottom: 2px;
+      width: 25px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .move-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    
+    .move-up-btn, .move-down-btn {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 2px 4px;
+      cursor: pointer;
+      font-size: 10px;
+      border-radius: 2px;
+      width: 18px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    
+    .move-up-btn:disabled, .move-down-btn:disabled {
+      background-color: #adb5bd;
+      cursor: not-allowed;
+    }
+    
+    .move-up-btn:hover:not(:disabled), .move-down-btn:hover:not(:disabled) {
+      background-color: #495057;
+    }
+    
+    .selection-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    
+    .selection-url {
+      background-color: #f8f9fa;
+      padding: 4px 8px;
+      border-bottom: 1px solid #dee2e6;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 20px;
+      min-height: 20px;
+    }
+    
+    .order-number {
+      background-color: #007cba;
+      color: white;
+      padding: 1px 5px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: bold;
+      min-width: 15px;
+      text-align: center;
+    }
+    
+    .page-info {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      color: #495057;
+      font-size: 10px;
+    }
+    
+    .char-count {
+      color: #6c757d;
+      font-size: 9px;
+      white-space: nowrap;
+    }
+    
+    .selection-text {
+      padding: 6px 8px;
+      overflow-y: auto;
+      max-height: 60px;
+      height: 60px;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      line-height: 1.3;
+      color: #212529;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+    
+    .selection-text::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    .selection-text::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    
+    .selection-text::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 2px;
+    }
+    
+    .selection-text::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
     }
     #presets-container button {
       margin-right: 5px;
@@ -119,9 +311,32 @@
     </div>
   </div>
 
-  <h2>捕获到的内容</h2>
+  <h2>
+    <span id="selection-title">捕获到的内容</span>
+    <div style="float: right; font-size: 12px; margin-top: 2px;">
+      <button id="continue-selection-btn" style="background-color: #007cba; color: white; border: none; padding: 4px 8px; cursor: pointer; font-size: 11px; border-radius: 3px; margin-right: 5px; display: none;">继续选择</button>
+      <button id="finish-selection-btn" style="background-color: #28a745; color: white; border: none; padding: 4px 8px; cursor: pointer; font-size: 11px; border-radius: 3px; margin-right: 5px; display: none;">完成选择</button>
+      <button id="new-session-btn" style="background-color: #ffc107; color: #212529; border: none; padding: 4px 8px; cursor: pointer; font-size: 11px; border-radius: 3px; margin-right: 5px; display: none;">新会话</button>
+    </div>
+    <div style="clear: both;"></div>
+  </h2>
   <div id="selection-container">
     <p><i>正在加载...</i></p>
+  </div>
+  
+  <div id="multi-selection-hint" style="display: none; background-color: #e8f4fd; border: 1px solid #bee5eb; padding: 8px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; color: #0c5460;">
+    <strong>💡 跨页面多选模式：</strong><br/>
+    • 在当前页面继续点击选择更多内容<br/>
+    • 切换到其他网页后，点击"继续选择"按钮在新页面继续选择<br/>
+    • 按 <kbd>ESC</kbd> 键或点击"完成选择"按钮结束选择<br/>
+    • 所有页面的选中内容将按顺序拼接到 Prompt 中
+  </div>
+  
+  <div id="continue-selection-hint" style="display: none; background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 8px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; color: #856404;">
+    <strong>🔄 继续跨页面选择：</strong><br/>
+    • 当前页面尚未开启选择模式<br/>
+    • 点击"继续选择"按钮在此页面添加更多选择内容<br/>
+    • 或者使用"新会话"开始全新的选择会话
   </div>
 
   <h2>选择一个预设 Prompt</h2>
